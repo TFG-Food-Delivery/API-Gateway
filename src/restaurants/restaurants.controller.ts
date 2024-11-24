@@ -11,6 +11,7 @@ import {
   Query,
   Logger,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { NATS_SERVICE } from 'src/config';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -24,6 +25,7 @@ import {
   UpdateDishDto,
   UpdateRestaurantDto,
 } from './dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -34,6 +36,7 @@ export class RestaurantsController {
   /* -------------------------------------------------------------------------- */
   /*                                 Restaurant                                 */
   /* -------------------------------------------------------------------------- */
+  @UseGuards(AuthGuard)
   @Post()
   createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto) {
     return this.client.send('createRestaurant', createRestaurantDto).pipe(
@@ -43,6 +46,7 @@ export class RestaurantsController {
     );
   }
 
+  @UseGuards(AuthGuard)
   @Post('/:id')
   createRestaurantMenu(
     @Param('id') id: string,
@@ -74,6 +78,7 @@ export class RestaurantsController {
     );
   }
 
+  @UseGuards(AuthGuard)
   @Patch(':id')
   patchRestaurant(
     @Param('id', ParseUUIDPipe) id: string,
@@ -88,6 +93,7 @@ export class RestaurantsController {
       );
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':id')
   removeRestaurant(@Param('id') id: string) {
     return this.client.send('removeRestaurant', +id).pipe(
@@ -101,6 +107,7 @@ export class RestaurantsController {
   /*                                    Dish                                    */
   /* -------------------------------------------------------------------------- */
 
+  @UseGuards(AuthGuard)
   @Post('/:id/menu')
   createDish(
     @Param('id', ParseUUIDPipe) id: string,
@@ -131,6 +138,8 @@ export class RestaurantsController {
       }),
     );
   }
+
+  @UseGuards(AuthGuard)
   @Patch('/menu/:dishId')
   updateDish(
     @Param('dishId', ParseUUIDPipe) dishId: string,
@@ -144,6 +153,7 @@ export class RestaurantsController {
     );
   }
 
+  @UseGuards(AuthGuard)
   @Delete('/menu/:dishId')
   deleteDish(@Param('dishId', ParseUUIDPipe) dishId: string) {
     return this.client.send('deleteDish', { dishId }).pipe(
