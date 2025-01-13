@@ -17,7 +17,7 @@ import {
 import { NATS_SERVICE } from 'src/config';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { PaginationDto } from 'src/common';
-import { catchError } from 'rxjs';
+import { catchError, firstValueFrom } from 'rxjs';
 import {
   CreateDishDto,
   CreateMenuDto,
@@ -46,6 +46,36 @@ export class RestaurantsController {
         throw new RpcException(err);
       }),
     );
+  }
+
+  @Post('/:id/upload-image')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadRestaurantImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new RpcException({
+        statusCode: 400,
+        message: 'No file provided',
+      });
+    }
+    const payload = {
+      restaurantId: id,
+      file: {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        buffer: file.buffer.toString('base64'),
+      },
+    };
+
+    const { url } = await firstValueFrom(
+      this.client.send('uploadRestaurantImage', payload),
+    ).catch((err) => {
+      throw new RpcException(err);
+    });
+
+    return this.client.send('updateRestaurant', { id, image: url });
   }
 
   @UseGuards(AuthGuard)
@@ -130,13 +160,12 @@ export class RestaurantsController {
     );
   }
 
-  @Post('/:id/upload-image')
+  @Post('/:id/menu/upload-image')
   @UseInterceptors(FileInterceptor('file'))
-  uploadImage(
+  uploadDishImage(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    console.log('restaurantId', id);
     if (!file) {
       throw new RpcException({
         statusCode: 400,
@@ -151,7 +180,7 @@ export class RestaurantsController {
         buffer: file.buffer.toString('base64'),
       },
     };
-    console.log('payload', payload);
+
     return this.client.send('uploadDishImage', payload).pipe(
       catchError((err) => {
         throw new RpcException(err);

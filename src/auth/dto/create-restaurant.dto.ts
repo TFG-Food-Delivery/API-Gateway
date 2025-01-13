@@ -1,7 +1,9 @@
 import {
   IsEnum,
   IsMilitaryTime,
+  IsOptional,
   IsString,
+  IsUrl,
   ValidateNested,
 } from 'class-validator';
 
@@ -17,6 +19,11 @@ export class CreateRestaurantDto {
 
   @IsString()
   restaurantName: string;
+
+  @IsString()
+  @IsUrl()
+  @IsOptional()
+  image: string;
 
   @ValidateNested()
   @Type(() => AddressDto)
