@@ -7,11 +7,12 @@ import {
   Param,
   Delete,
   Inject,
-  ParseIntPipe,
   Query,
   Logger,
   ParseUUIDPipe,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { NATS_SERVICE } from 'src/config';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -21,11 +22,12 @@ import {
   CreateDishDto,
   CreateMenuDto,
   CreateRestaurantDto,
-  RestaurantPaginationDto,
   UpdateDishDto,
   UpdateRestaurantDto,
 } from './dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { SearchPaginationDto } from 'src/common/dto/search-pagination.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -62,11 +64,8 @@ export class RestaurantsController {
   }
 
   @Get()
-  findAllRestaurants(
-    @Query() restaurantPaginationDto: RestaurantPaginationDto,
-  ) {
-    this.LOGGER.log('findAll');
-    return this.client.send('findAllRestaurants', restaurantPaginationDto);
+  findAllRestaurants(@Query() searchPaginationDto: SearchPaginationDto) {
+    return this.client.send('findAllRestaurants', searchPaginationDto);
   }
 
   @Get(':id')
@@ -108,28 +107,70 @@ export class RestaurantsController {
   /* -------------------------------------------------------------------------- */
 
   @UseGuards(AuthGuard)
+  @Post('/:id/category')
+  createCategory(@Param('id', ParseUUIDPipe) id: string, @Body() categoryName) {
+    const { name } = categoryName;
+    return this.client.send('createCategory', { id, categoryName: name }).pipe(
+      catchError((err) => {
+        throw new RpcException(err);
+      }),
+    );
+  }
+
+  @UseGuards(AuthGuard)
   @Post('/:id/menu')
   createDish(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() createDishDto: CreateDishDto,
   ) {
-    return this.client.send('createDish', { id, ...createDishDto }).pipe(
+    return this.client.send('createDish', { id, createDishDto }).pipe(
       catchError((err) => {
         throw new RpcException(err);
       }),
     );
   }
+
+  @Post('/:id/upload-image')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    console.log('restaurantId', id);
+    if (!file) {
+      throw new RpcException({
+        statusCode: 400,
+        message: 'No file provided',
+      });
+    }
+    const payload = {
+      restaurantId: id,
+      file: {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        buffer: file.buffer.toString('base64'),
+      },
+    };
+    console.log('payload', payload);
+    return this.client.send('uploadDishImage', payload).pipe(
+      catchError((err) => {
+        throw new RpcException(err);
+      }),
+    );
+  }
+
   @Get(':id/menu')
   findAllDishes(
     @Param('id', ParseUUIDPipe) id: string,
-    @Query() paginationDto: PaginationDto,
+    @Query() searchPaginationDto: SearchPaginationDto,
   ) {
-    return this.client.send('findAllDishes', { id, paginationDto }).pipe(
+    return this.client.send('findAllDishes', { id, searchPaginationDto }).pipe(
       catchError((err) => {
         throw new RpcException(err);
       }),
     );
   }
+
   @Get('/menu/:dishId')
   findOneDish(@Param('dishId', ParseUUIDPipe) dishId: string) {
     return this.client.send('findOneDish', { dishId }).pipe(
@@ -145,7 +186,6 @@ export class RestaurantsController {
     @Param('dishId', ParseUUIDPipe) dishId: string,
     @Body() updateDishDto: UpdateDishDto,
   ) {
-    this.LOGGER.log('Updated dish000');
     return this.client.send('updateDish', { dishId, ...updateDishDto }).pipe(
       catchError((err) => {
         throw new RpcException(err);

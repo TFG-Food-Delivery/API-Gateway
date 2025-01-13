@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateRestaurantDto } from './create-restaurant.dto';
 import { IsBoolean, IsOptional } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class UpdateRestaurantDto extends PartialType(CreateRestaurantDto) {
   @IsBoolean()

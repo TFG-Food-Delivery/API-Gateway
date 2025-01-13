@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { envs } from 'src/config';
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { RpcCustomExceptionFilter } from './common';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const LOGGER = new Logger('Main - API Gateway');
@@ -26,6 +27,13 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new RpcCustomExceptionFilter());
+  app.use(cookieParser());
+  app.enableCors({
+    origin: 'http://localhost:5173', // Origen permitido
+    methods: 'GET,POST, PUT, PATCH,DELETE', // Métodos permitidos
+    allowedHeaders: 'Content-Type, Authorization', // Cabeceras permitidas
+    credentials: true, // Permite el envío de cookies o credenciales
+  });
 
   await app.listen(envs.port);
 

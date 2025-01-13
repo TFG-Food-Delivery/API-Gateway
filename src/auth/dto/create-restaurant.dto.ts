@@ -4,13 +4,19 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { CuisineType, CuisineTypeList } from '../enum';
+
 import { Type } from 'class-transformer';
-import { AddressDto } from 'src/common/dto/address.dto';
+import { AddressDto } from '../../common/dto/address.dto';
+import { RegisterUserDto } from '../../common/dto/register-user.dto';
+import { CuisineType, CuisineTypeList } from 'src/restaurants/enum';
 
 export class CreateRestaurantDto {
+  @ValidateNested()
+  @Type(() => RegisterUserDto)
+  user: RegisterUserDto;
+
   @IsString()
-  email: string;
+  restaurantName: string;
 
   @ValidateNested()
   @Type(() => AddressDto)

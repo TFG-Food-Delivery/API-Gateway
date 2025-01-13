@@ -4,10 +4,11 @@ import {
   IsOptional,
   IsPhoneNumber,
   IsString,
-  IsStrongPassword,
   IsUrl,
 } from 'class-validator';
-import { Role, RolesList } from '../enum';
+import { Role, RolesList } from '../../auth/enum';
+import { IsAdult } from '../../auth/validators/is-adult.validator';
+import { Type } from 'class-transformer';
 
 export class RegisterUserDto {
   @IsString()
@@ -15,14 +16,13 @@ export class RegisterUserDto {
 
   @IsString()
   @IsOptional()
-  surname: string;
+  lastName: string;
 
   @IsString()
   @IsEmail()
   email: string;
 
   @IsString()
-  @IsStrongPassword()
   password: string;
 
   @IsOptional()
@@ -33,6 +33,10 @@ export class RegisterUserDto {
   @IsString()
   @IsPhoneNumber('ES')
   phoneNumber: string;
+
+  @Type(() => Date)
+  @IsAdult()
+  dateOfBirth: Date;
 
   @IsString()
   @IsEnum(RolesList, {

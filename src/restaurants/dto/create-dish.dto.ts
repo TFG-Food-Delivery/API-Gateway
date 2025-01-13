@@ -1,4 +1,3 @@
-import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
@@ -6,10 +5,11 @@ import {
   IsOptional,
   IsPositive,
   IsString,
-  ValidateNested,
+  IsUrl,
+  IsUUID,
 } from 'class-validator';
-import { CustomIngredientDto } from './custom-ingredient.dto';
 import { Allergen, AllergensList } from '../enum';
+import { Type } from 'class-transformer';
 
 export class CreateDishDto {
   @IsString()
@@ -19,10 +19,15 @@ export class CreateDishDto {
   description: string;
 
   @IsString()
-  image: string;
+  @IsUrl()
+  image?: string;
+
+  @IsUUID()
+  categoryId: string;
 
   @IsNumber()
   @IsPositive()
+  @Type(() => Number)
   price: number;
 
   @IsArray()
@@ -30,11 +35,5 @@ export class CreateDishDto {
     message: `allergens must be one of the following values: ${AllergensList}`,
     each: true,
   })
-  allergens: Allergen[];
-
-  @IsArray()
-  @ValidateNested({ each: true }) // Valida cada elemento del array
-  @Type(() => CustomIngredientDto) // Transforma los elementos en instancias de customIngredient
-  @IsOptional()
-  customIngredients?: CustomIngredientDto[] = [];
+  allergens: Allergen[] = [];
 }
