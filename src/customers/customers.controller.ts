@@ -82,6 +82,18 @@ export class CustomersController {
   }
 
   @UseGuards(AuthGuard)
+  @Patch(':id/cart')
+  setCart(
+    @Param('id', ParseUUIDPipe) customerId: string,
+    @Body() setCartDto: { items: { dishId: string; quantity: number }[] },
+  ) {
+    return this.client.send('setCart', {
+      id: customerId,
+      items: setCartDto.items,
+    });
+  }
+
+  @UseGuards(AuthGuard)
   @Post(':id/cart')
   addToCart(
     @Param('id', ParseUUIDPipe) customerId: string,
