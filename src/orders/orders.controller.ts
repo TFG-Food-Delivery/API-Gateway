@@ -90,6 +90,32 @@ export class OrdersController {
       );
   }
 
+  @Get('/customers/stats/:customerId')
+  getCustomerStats(
+    @Param('customerId', ParseUUIDPipe) customerId: string,
+    @Query('period') period: string,
+  ) {
+    return this.client.send('getCustomerStats', { customerId, period }).pipe(
+      catchError((err) => {
+        throw new RpcException(err);
+      }),
+    );
+  }
+
+  @Get('/restaurants/stats/:restaurantId')
+  getRestaurantStats(
+    @Param('restaurantId', ParseUUIDPipe) restaurantId: string,
+    @Query('period') period: string,
+  ) {
+    return this.client
+      .send('getRestaurantStats', { restaurantId, period })
+      .pipe(
+        catchError((err) => {
+          throw new RpcException(err);
+        }),
+      );
+  }
+
   @Get(':id')
   findOneOrder(@Param('id') id: string) {
     return this.client.send('findOneOrder', { id }).pipe(
