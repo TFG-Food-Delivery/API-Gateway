@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsString, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 
 import { OrderItemDto } from './order-item.dto';
 import { OrderItem } from '../types';
@@ -18,4 +25,10 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItem[];
+
+  @IsNumber()
+  deliveryFee: number;
+
+  @IsBoolean()
+  useLoyaltyPoints: boolean;
 }
